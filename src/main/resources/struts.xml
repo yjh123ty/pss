@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+
+	<!-- 关闭动态方法调用，使用*_*来访问 -->
+	<constant name="struts.enable.DynamicMethodInvocation" value="false" />
+	<!-- 打开开发者模式 -->
+	<constant name="struts.devMode" value="true" />
+	<!-- 简单主题样式 -->
+	<constant name="struts.ui.theme" value="simple" />
+	<!-- 防止*.css,*.js,*.png访问OpenSessionInViewFilter,只处理 .action的请求进入OpenSessionInViewFilter -->
+	<constant name="struts.action.extension" value="action" />
+	<!-- 支持国际化: value:资源文件的基本名词 -->
+	<constant name="struts.custom.i18n.resources" value="app" />
+
+
+	<package name="default" namespace="/" extends="struts-default,json-default">
+		<!-- 继承json-default后，可以直接使用json类型进行输出 -->
+
+		<interceptors>
+			<!-- 定义自定义拦截器 -->
+			<interceptor name="permissionInterceptor"
+				class="com.yjh.pss.web.interceptor.PermissionInterceptor">
+				<!-- 后台PermissionInterceptor用setExcludeActions来接受,tomcat启动只访问一次 -->
+				<param name="excludeActions">LoginAction,LogoutAction</param>
+			</interceptor>
+			<!-- 定义自定义拦截器栈 -->
+			<interceptor-stack name="pssStack">
+				<!-- 必须先引人权限拦截器 -->
+				<interceptor-ref name="permissionInterceptor"></interceptor-ref>
+				<!-- 引人二级参数绑定拦截器 -->
+				<interceptor-ref name="paramsPrepareParamsStack"></interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+
+		<!-- 更换默认拦截器为自定义拦截器栈 -->
+		<default-interceptor-ref name="pssStack" />
+
+		<!-- 全局返回视图 -->
+		<global-results>
+			<!-- 视图名称login，显示登录页面 -->
+			<result name="login">/WEB-INF/views/login.jsp</result>
+			<!-- 重定向 main 后台主页 -->
+			<result name="main" type="redirectAction">main</result>
+			<!-- 视图名称permission，显示没有权限的页面 -->
+			<result name="permission">/WEB-INF/views/permission.jsp</result>
+			
+			<!-- 下载视图 -->
+			<result name="download" type="stream">
+				<!-- 下载文件的mime类型 -->
+				<!-- 在tomcat/conf/web.xml中去找类型 contentType=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet -->
+				<param name="contentType">application/vnd.openxmlformats-officedocument.spreadsheetml.sheet</param>
+				<!-- 默认下载文件流名称,可以不写 -->
+				<!-- <param name="inputName">inputStream</param> -->
+				<!-- 建议下载的文件名 -->
+				<param name="contentDisposition">filename=${fileName}</param>
+				<!-- 缓冲 -->
+				<param name="bufferSize">4096</param>
+			</result>
+			
+			<!-- 二级联动视图 -->
+			<result name="jsonResult" type="json">
+				<!-- <result-type name="json"属性json的类 class="org.apache.struts2.json.JSONResult"/> -->
+				<!-- 没有配置root属性,输出当前action的get属性的值 -->
+				<!-- 如果配置root属性,只输出root指向的对象 -->
+				<!-- private String root; -->
+				<param name="root">#map</param>
+				<!-- 排除空的属性不输出 -->
+				<!-- private boolean excludeNullProperties = false; -->
+				<param name="excludeNullProperties">true</param>
+			</result>
+		</global-results>
+
+		<!-- 没写class,本质是使用 -->
+		<!-- <default-class-ref class="com.opensymphony.xwork2.ActionSupport" /> -->
+
+		<!-- 后台主页 -->
+		<action name="main" class="mainAction">
+			<result>/WEB-INF/views/main.jsp</result>
+		</action>
+		<!-- 后台右边 -->
+		<action name="right">
+			<result>/WEB-INF/views/right.jsp</result>
+		</action>
+		
+		<!-- 后台CRM主页 -->
+		<action name="crm">
+			<result>/WEB-INF/views/crm.jsp</result>
+		</action>
+		
+		<!-- 登录 -->
+		<action name="login_*" class="loginAction" method="{1}" />
+
+		<!-- 退出 -->
+		<action name="logout" class="com.yjh.pss.web.action.LogoutAction" />
+
+		<!-- 上传文件 -->
+		<action name="import" class="com.yjh.pss.web.action.ImportAction"
+			method="upload">
+			<result>/WEB-INF/views/import.jsp</result>
+		</action>
+		
+		<!-- datagrid -->
+		<action name="datagrid_*" class="com.yjh.pss.web.action.DatagridAction" method="{1}">
+			<result>/WEB-INF/views/datagrid.jsp</result>
+		</action>
+
+		<!-- 员工Action -->
+		<action name="employee_*" class="employeeAction" method="{1}">
+			<!-- 列表 -->
+			<result>/WEB-INF/views/employee/employee.jsp</result>
+			<!-- 编辑页面 -->
+			<result name="input">/WEB-INF/views/employee/employee_input.jsp
+			</result>
+			<!-- 删除或者修改后的跳转：重定向 -->
+			<result name="reload" type="redirectAction">
+				<!-- 重定向之后的请求的url地址,redirectAction类型会自动在url地址后面加上.action -->
+				<param name="actionName">employee</param>
+				<!-- ${baseQuery.currentPage}表示获取当前action里面getBaseQuery().getCurrentPage -->
+				<!-- 这里需要获取查询的所有条件数据 -->
+				<param name="baseQuery.currentPage">${baseQuery.currentPage}</param>
+				<param name="baseQuery.pageSize">${baseQuery.pageSize}</param>
+				<!-- 其他的查询参数 -->
+				<param name="baseQuery.username">${baseQuery.username}</param>
+				<param name="baseQuery.email">${baseQuery.email}</param>
+				<param name="baseQuery.deptId">${baseQuery.deptId}</param>
+				<param name="id">${id}</param>
+			</result>
+		</action>
+
+		<!-- 通用Action -->
+		<action name="*_*" class="{1}Action" method="{2}">
+			<!-- 列表 -->
+			<result>/WEB-INF/views/{1}/{1}.jsp</result>
+			<!-- 修改视图 -->
+			<result name="input">/WEB-INF/views/{1}/{1}_input.jsp</result>
+			<!-- 访问的方法就是视图的名称 -->
+			<result name="{2}">/WEB-INF/views/{1}/{1}_{2}.jsp</result>
+			
+			<result name="reload" type="redirectAction">
+				<param name="actionName">{1}</param>
+				<param name="baseQuery.currentPage">${baseQuery.currentPage}</param>
+				<param name="baseQuery.pageSize">${baseQuery.pageSize}</param>
+				<param name="id">${id}</param>
+			</result>
+		</action>
+
+
+	</package>
+
+</struts>

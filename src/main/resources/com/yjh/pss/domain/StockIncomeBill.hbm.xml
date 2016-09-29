@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+	<hibernate-mapping package="com.yjh.pss.domain">
+		<class name="StockIncomeBill" table="stockIncomeBill">
+			<id name="id">
+				<generator class="native" />
+			</id>
+			<property name="vdate" />
+			<property name="totalAmount" />
+			<property name="totalNum" />
+			<property name="inputTime" update="false"/>
+			<property name="auditorTime" />
+			<property name="status" />
+			<!-- 多对一 -->
+			<many-to-one name="supplier" class="Supplier" column="supplier_id" not-null="true"></many-to-one>
+			<many-to-one name="auditor" class="Employee" column="auditor_id"></many-to-one>
+			<many-to-one name="inputUser" class="Employee" column="inputUser_id" not-null="true"></many-to-one>
+			<many-to-one name="keeper" class="Employee" column="keeper_id" not-null="true"></many-to-one>
+			<many-to-one name="depot" column="depot_id" not-null="true" />
+			<!-- 双向一对多（组合关系）：入库单-入库单详情 -->
+			<!-- 一方放弃管理外键，由多方维护外键 -->
+			<bag name="items" cascade="all-delete-orphan" inverse="true">
+				<key column="bill_id" />
+				<one-to-many class="StockIncomeBillItem"/>
+			</bag>
+		</class>
+	</hibernate-mapping>

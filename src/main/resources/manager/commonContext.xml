@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Application context definition for PetClinic on Hibernate. -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+			http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+
+	<bean id="baseDao" class="com.yjh.pss.dao.BaseDao">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<!-- 属性注入的抽取：不用写class，定义为abstract="true"即可 -->
+	<bean id="baseService" abstract="true">
+		<property name="baseDao" ref="baseDao"/>
+	</bean>
+	
+	<bean id="mainAction" class="com.yjh.pss.web.action.MainAction" scope="prototype">
+		<property name="menuService" ref="menuService" />
+	</bean>
+
+	<!-- 登录 -->
+	<bean id="loginAction" class="com.yjh.pss.web.action.LoginAction" scope="prototype">
+		<property name="employeeService" ref="employeeService" />
+	</bean>
+	
+	<!-- 注销 -->
+	<bean id="logoutAction" class="com.yjh.pss.web.action.LogoutAction" scope="prototype" />
+	
+	<!-- 上传 -->
+	<bean id="importAction" class="com.yjh.pss.web.action.ImportAction" scope="prototype">
+		<property name="employeeService" ref="employeeService" />
+		<property name="departmentService" ref="departmentService" />
+	</bean>	
+	
+	
+	
+</beans>
